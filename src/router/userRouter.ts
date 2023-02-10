@@ -9,7 +9,6 @@ export const userRouter = express.Router()
 const userController = new UserController(
     new UserBusiness(new UserDatabase, new UserDTO),
     new UserDTO
-
 )
 
 userRouter.get("/", userController.getUsers)
