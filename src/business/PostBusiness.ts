@@ -1,157 +1,288 @@
 import { PostDatabase } from "../database/PostDatabase"
-import { PostDTO } from "../dtos/PostDTO"
+import { CreatePostInputDTO, DeletePostInputDTO, EditPostInputDTO, GetPostInputDTO, GetPostOutputDTO, LikeOrDislikePostInputDTO } from "../dtos/UserDTO"
 import { BadRequestError } from "../errors/BadRequestError"
+import { ForbiddenRequestError } from "../errors/ForbiddenRequestError"
 import { NotFoundError } from "../errors/NotFoundError"
-import { PostDB } from "../interfaces/types"
+import { LikeDislikeDB, PostWithCreatorDB, POST_LIKE, USER_ROLES } from "../interfaces/types"
 import { Post } from "../models/Post"
+import { IdGenerator } from "../services/IdGenerator"
+import { TokenManager } from "../services/TokenManager"
 
 export class PostBusiness {
-    constructor(private postDatabase: PostDatabase, private postDTO: PostDTO) { }
+    constructor(
+        private postDatabase: PostDatabase,
+        private idGenerator: IdGenerator,
+        private tokenManager: TokenManager,
+    ) { }
 
-    public getPosts = async (input: any) => {
-        const { q } = input
+    public getPosts = async (input: GetPostInputDTO): Promise<GetPostOutputDTO> => {
+        const { token } = input
 
-        const postsDB = await this.postDatabase.findPosts(q)
-
-        const posts: Post[] = postsDB.map((postDB) => new Post(
-            postDB.id,
-            postDB.creator_id,
-            postDB.content,
-            postDB.likes,
-            postDB.dislikes
-        ))
-
-        return posts
-    }
-
-    public createPost = async (input: any) => {
-        const { id, creatorId, content, likes, dislikes } = input
-
-        if (creatorId.length !== 4) {
-            throw new BadRequestError("'creatorId' deve possuir 4 caracteres")
+        if (token === undefined) {
+            throw new BadRequestError('Missing token')
         }
 
-        if (content.length < 10) {
-            throw new BadRequestError("'content' deve possuir pelo menos 10 caracteres")
+        if (!token) {
+            throw new BadRequestError(`Invalid token`)
         }
 
-        if (likes.length >= 0) {
-            throw new BadRequestError("'likes' deve ser maior ou igual à zero")
+        const tokenPayload = this.tokenManager.getPayload(token as string)
+
+        if (tokenPayload === null) {
+            throw new BadRequestError(`Invalid token payload`)
         }
 
-        if (dislikes.length >= 0) {
-            throw new BadRequestError("'dislikes' deve ser maior ou igual à zero")
+        if (tokenPayload.role !== USER_ROLES.ADMIN) {
+            throw new ForbiddenRequestError(`User ${tokenPayload.role} is not an administrator`)
         }
 
-        const postDBExists = await this.postDatabase.findPostById(id)
+        const postWithCreatorsDB: PostWithCreatorDB[] =
+            await this.postDatabase.getPostWithCreators()
 
-        if (postDBExists) {
-            throw new BadRequestError("'id' já existe")
-        }
+        const posts = postWithCreatorsDB.map(
+            (postWithCreatorDB) => {
+                const post = new Post(
+                    postWithCreatorDB.id,
+                    postWithCreatorDB.creator_id,
+                    postWithCreatorDB.content,
+                    postWithCreatorDB.likes,
+                    postWithCreatorDB.dislikes,
+                    postWithCreatorDB.created_at,
+                    postWithCreatorDB.updated_at,
+                    postWithCreatorDB.creator_name
+                )
 
-        const newPost = new Post(
-            id,
-            creatorId,
-            content,
-            likes,
-            dislikes
+                return post.toBusinessModel()
+            }
         )
 
-        const newPostDB: PostDB = {
-            id: newPost.getId(),
-            creator_id: newPost.getCreatorId(),
-            content: newPost.getContent(),
-            likes: newPost.getLikes(),
-            dislikes: newPost.getDislikes()
-        }
-
-        await this.postDatabase.insertPost(newPostDB)
-
-        const output = this.postDTO.createPostOutputDTO(newPost)
+        const output: GetPostOutputDTO = posts
 
         return output
     }
 
-    public editPost = async (input: any) => {
-        const {
-            idToEdit,
-            newId,
-            newCreatorId,
-            newContent,
-            newLikes,
-            newDislikes
-        } = input
+    public createPost = async (input: CreatePostInputDTO): Promise<void> => {
+        const { token, name } = input
 
-        if (newId.length !== 4) {
-            throw new BadRequestError("'id' deve possuir 4 caracteres")
+        if (token === undefined) {
+            throw new BadRequestError('Missing token')
         }
 
-        if (newCreatorId.length !== 4) {
-            throw new BadRequestError("'creatorId' deve possuir 4 caracteres")
+        if (!token) {
+            throw new BadRequestError(`Invalid token`)
         }
 
-        if (newContent.length < 10) {
-            throw new BadRequestError("'content' deve possuir mais de 10 caracteres")
+        const tokenPayload = this.tokenManager.getPayload(token as string)
+
+        if (tokenPayload === null) {
+            throw new BadRequestError(`Invalid token payload`)
         }
 
-        if (newLikes.length >= 0) {
-            throw new BadRequestError("'likes' deve ser maior ou igual à zero")
+        if (tokenPayload.role !== USER_ROLES.ADMIN) {
+            throw new ForbiddenRequestError(`User ${tokenPayload.role} is not an administrator`)
         }
 
-        if (newDislikes.length >= 0) {
-            throw new BadRequestError("'dislikes' deve ser maior ou igual à zero")
+        if (typeof name !== "string") {
+            throw new BadRequestError("'name' deve ser string")
+        }
+
+        const id = this.idGenerator.generate()
+        const createdAt = new Date().toISOString()
+        const updatedAt = new Date().toISOString()
+        const creatorId = tokenPayload.id
+        const creatorName = tokenPayload.name
+
+        const post = new Post(
+            id,
+            creatorId,
+            content,
+            0,
+            0,
+            createdAt,
+            updatedAt,
+            creatorName
+        )
+
+        const postDB = post.toDBModel()
+
+        await this.postDatabase.insertPost(postDB)
+    }
+
+    public editPost = async (input: EditPostInputDTO): Promise<void> => {
+        const { idToEdit, token, name } = input
+
+        if (token === undefined) {
+            throw new BadRequestError('Missing token')
+        }
+
+        if (!token) {
+            throw new BadRequestError(`Invalid token`)
+        }
+
+        const tokenPayload = this.tokenManager.getPayload(token as string)
+
+        if (tokenPayload === null) {
+            throw new BadRequestError(`Invalid token payload`)
+        }
+
+        if (tokenPayload.role !== USER_ROLES.ADMIN) {
+            throw new ForbiddenRequestError(`User ${tokenPayload.role} is not an administrator`)
+        }
+
+        if (typeof name !== "string") {
+            throw new BadRequestError("'name' must be string")
         }
 
         const postToEditDB = await this.postDatabase.findPostById(idToEdit)
 
         if (!postToEditDB) {
-            throw new NotFoundError("'id' para editar não existe")
+            throw new NotFoundError("'id' to edit does not exist")
         }
+
+        const creatorId = tokenPayload.id
+
+        if (postToEditDB.creator_id !== creatorId) {
+            throw new BadRequestError("only the person who created the post can edit it")
+        }
+
+        const creatorName = tokenPayload.name
 
         const post = new Post(
             postToEditDB.id,
-            postToEditDB.creator_id,
+            creatorId,
             postToEditDB.content,
             postToEditDB.likes,
-            postToEditDB.dislikes
+            postToEditDB.dislikes,
+            postToEditDB.created_at,
+            postToEditDB.updated_at,
+            creatorName
         )
 
-        newId && post.setId(newId)
-        newCreatorId && post.setCreatorId(newCreatorId)
-        newContent && post.setContent(newContent)
-        newLikes && post.setLikes(newLikes)
-        newDislikes && post.setDislikes(newDislikes)
+        post.setUpdatedAt(new Date().toISOString())
 
-        const updatedPostDB: PostDB = {
-            id: post.getId(),
-            creator_id: post.getCreatorId(),
-            content: post.getContent(),
-            likes: post.getLikes(),
-            dislikes: post.getDislikes()
-        }
+        const updatedPostDB = post.toDBModel()
 
-        await this.postDatabase.updatePost(updatedPostDB)
-
-        const output = this.postDTO.editPostOutputDTO(post)
-
-        return output
+        await this.postDatabase.updatePost(idToEdit, updatedPostDB)
     }
 
-    public deletePost = async (input: any) => {
-        const { idToDelete } = input
+    public deletePost = async (input: DeletePostInputDTO): Promise<void> => {
+        const { idToDelete, token } = input
 
-        const postToDeleteDB = await this.postDatabase.findPostById(idToDelete)
-
-        if (!postToDeleteDB) {
-            throw new NotFoundError("'id' para deletar não existe")
+        if (token === undefined) {
+            throw new BadRequestError('Missing token')
         }
 
-        await this.postDatabase.deletePostById(postToDeleteDB.id)
-
-        const output = {
-            message: "'Post' deletado com sucesso"
+        if (!token) {
+            throw new BadRequestError(`Invalid token`)
         }
 
-        return output
+        const tokenPayload = this.tokenManager.getPayload(token as string)
+
+        if (tokenPayload === null) {
+            throw new BadRequestError(`Invalid token payload`)
+        }
+
+        if (tokenPayload.role !== USER_ROLES.ADMIN) {
+            throw new ForbiddenRequestError(`User ${tokenPayload.role} is not an administrator`)
+        }
+
+        if (typeof idToDelete !== "string") {
+            throw new BadRequestError("'idToDelete' must be string")
+        }
+
+        const postDB = await this.postDatabase.findPostById(idToDelete)
+
+        if (!postDB) {
+            throw new NotFoundError("'id' not found")
+        }
+
+        const creatorId = tokenPayload.id
+
+        if (
+            tokenPayload.role !== USER_ROLES.ADMIN
+            && postDB.creator_id !== creatorId
+        ) {
+            throw new BadRequestError("only the person who created the post can delete it")
+        }
+
+        await this.postDatabase.deletePostById(idToDelete)
+    }
+
+    public likeOrDislikePlaylist = async (input: LikeOrDislikePostInputDTO): Promise<void> => {
+        const { idToLikeOrDislike, token, like } = input
+
+        if (token === undefined) {
+            throw new BadRequestError("Missing token")
+        }
+
+        const tokenPayload = this.tokenManager.getPayload(token)
+
+        if (tokenPayload === null) {
+            throw new BadRequestError("invalid token")
+        }
+
+        if (typeof like !== "boolean") {
+            throw new BadRequestError("'like' must be boolean")
+        }
+
+        const postWithCreatorDB = await this.postDatabase
+            .findPostWithCreatorById(idToLikeOrDislike)
+
+        if (!postWithCreatorDB) {
+            throw new NotFoundError("'id' not found")
+        }
+
+        const userId = tokenPayload.id
+        const likeSQLite = like ? 1 : 0
+
+        const likeDislikeDB: LikeDislikeDB = {
+            user_id: userId,
+            post_id: postWithCreatorDB.id,
+            like: likeSQLite
+        }
+
+        const post = new Post(
+            postWithCreatorDB.id,
+            postWithCreatorDB.creator_id,
+            postWithCreatorDB.content,
+            postWithCreatorDB.likes,
+            postWithCreatorDB.dislikes,
+            postWithCreatorDB.created_at,
+            postWithCreatorDB.updated_at,
+            postWithCreatorDB.creator_name,
+        )
+
+        const likeDislikeExists = await this.postDatabase
+            .findLikeDislike(likeDislikeDB)
+
+        if (likeDislikeExists === POST_LIKE.ALREADY_LIKED) {
+            if (like) {
+                await this.postDatabase.removeLikeDislike(likeDislikeDB)
+                post.removeLike()
+            } else {
+                await this.postDatabase.updateLikeDislike(likeDislikeDB)
+                post.removeLike()
+                post.addDislike()
+            }
+
+        } else if (likeDislikeExists === POST_LIKE.ALREADY_DISLIKED) {
+            if (like) {
+                await this.postDatabase.updateLikeDislike(likeDislikeDB)
+                post.removeDislike()
+                post.addLike()
+            } else {
+                await this.postDatabase.removeLikeDislike(likeDislikeDB)
+                post.removeDislike()
+            }
+
+        } else {
+            await this.postDatabase.likeOrDislikePlaylist(likeDislikeDB)
+
+            like ? post.addLike() : post.addDislike()
+        }
+
+        const updatedPostDB = post.toDBModel()
+
+        await this.postDatabase.updatePost(idToLikeOrDislike, updatedPostDB)
     }
 }

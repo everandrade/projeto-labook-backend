@@ -1,111 +1,132 @@
-import { BadRequestError } from "../errors/BadRequestError"
-import { EditUserInputDTO, EditUserOutputDTO, UserInputDTO, UserOutputDTO } from "../interfaces/types"
-import { User } from "../models/User"
+import { PostModel, UserModel, USER_ROLES } from "../interfaces/types"
 
-export class UserDTO {
-    public createUserInputDTO(
-        id: unknown,
-        name: unknown,
-        email: unknown,
-        password: unknown,
-        role: unknown): UserInputDTO {
-        if (typeof id !== "string") {
-            throw new BadRequestError("'id' deve ser string")
-        }
+export interface GetUsersInput {
+    q: unknown,
+    token: unknown
+}
 
-        if (typeof name !== "string") {
-            throw new BadRequestError("'name' deve ser string")
-        }
+export type GetUsersOutput = UserModel[]
 
-        if (typeof email !== "string") {
-            throw new BadRequestError("'email' deve ser string")
-        }
+export interface SignupInput {
+    name: unknown,
+    email: unknown,
+    password: unknown
+}
 
-        if (typeof password !== "string") {
-            throw new BadRequestError("'password' deve ser string")
-        }
+export interface SignupOutput {
+    message: string,
+    token: string
+}
 
-        if (typeof role !== "string") {
-            throw new BadRequestError("'role' deve ser string")
-        }
+export interface LoginInput {
+    email: unknown,
+    password: unknown
+}
 
-        const dto: UserInputDTO = {
-            id,
-            name,
-            email,
-            password,
-            role
-        }
-        return dto
+export interface LoginOutput {
+    message: string,
+    token: string
+}
+
+export interface PostInputDTO {
+    id: string,
+    creatorId: string,
+    content: string,
+    likes: number,
+    dislikes: number
+}
+
+export interface PostOutputDTO {
+    message: string,
+    Post: {
+        id: string,
+        creatorId: string,
+        content: string,
+        likes: number,
+        dislikes: number
     }
+}
 
-    public createUserOutputDTO(parameter: User): UserOutputDTO {
-        const dto: UserOutputDTO = {
-            message: "Usuário registrado com sucesso",
-            User: {
-                id: parameter.getId(),
-                name: parameter.getName(),
-                email: parameter.getEmail(),
-                password: parameter.getPassword(),
-                role: parameter.getRole()
-            }
-        }
-        return dto
+export interface EditPostInputDTO {
+    idToEdit: string,
+    token: string | undefined,
+    name: unknown
+}
+
+export interface EditPostOutputDTO {
+    message: string,
+    Post: {
+        id: string,
+        creatorId: string,
+        content: string,
+        likes: number,
+        dislikes: number
     }
+}
 
-    public editUserInputDTO(idToEdit: string, newId: unknown, newName: unknown, newEmail: unknown, newPassword: unknown, newRole: unknown): EditUserInputDTO {
-        if (newId !== undefined) {
-            if (typeof newId !== "string") {
-                throw new BadRequestError("'id' deve ser string")
-            }
-        }
+export interface UserInputDTO {
+    id: string,
+    name: string,
+    email: string,
+    password: string,
+    role: USER_ROLES
+}
 
-        if (newName !== undefined) {
-            if (typeof newName !== "string") {
-                throw new BadRequestError("'name' deve ser string")
-            }
-        }
-
-        if (newEmail !== undefined) {
-            if (typeof newEmail !== "string") {
-                throw new BadRequestError("'email' deve ser string")
-            }
-        }
-
-        if (newPassword !== undefined) {
-            if (typeof newPassword !== "string") {
-                throw new BadRequestError("'password' deve ser string")
-            }
-        }
-
-        if (newRole !== undefined) {
-            if (typeof newRole !== "string") {
-                throw new BadRequestError("'role' deve ser string")
-            }
-        }
-
-        const dto: EditUserInputDTO = {
-            idToEdit,
-            newId,
-            newName,
-            newEmail,
-            newPassword,
-            newRole
-        }
-        return dto
+export interface UserOutputDTO {
+    message: string,
+    User: {
+        id: string,
+        name: string,
+        email: string,
+        password: string,
+        role: USER_ROLES
     }
+}
 
-    public editUserOutputDTO(parameter: User): EditUserOutputDTO {
-        const dto: EditUserOutputDTO = {
-            message: "'User' editado com sucesso",
-            User: {
-                id: parameter.getId(),
-                name: parameter.getName(),
-                email: parameter.getEmail(),
-                password: parameter.getPassword(),
-                role: parameter.getRole()
-            }
-        }
-        return dto
+export interface EditUserInputDTO {
+    idToEdit: string,
+    newId: string | undefined,
+    newName: string | undefined,
+    newEmail: string | undefined,
+    newPassword: string | undefined,
+    newRole: USER_ROLES | undefined
+}
+
+export interface EditUserOutputDTO {
+    message: string,
+    User: {
+        id: string,
+        name: string,
+        email: string,
+        password: string,
+        role: USER_ROLES
     }
+}
+
+export interface GetPostInputDTO {
+    token: string | undefined
+}
+
+export type GetPostOutputDTO = PostModel[]
+
+export interface CreatePostInputDTO {
+    token: string | undefined,
+    name: unknown
+}
+
+export interface EditPostInputDTO {
+    idToEdit: string,
+    token: string | undefined,
+    name: unknown
+}
+
+export interface DeletePostInputDTO {
+    idToDelete: string,
+    token: string | undefined
+}
+
+export interface LikeOrDislikePostInputDTO {
+    idToLikeOrDislike: string,
+    token: string | undefined,
+    like: unknown
 }
