@@ -1,49 +1,31 @@
+export interface TokenPayload {
+    id: string,
+    name: string,
+    role: USER_ROLES
+}
+
 //------------------Users
+export enum USER_ROLES {
+    NORMAL = "NORMAL",
+    ADMIN = "ADMIN"
+}
+
 export interface UserDB {
     id: string,
     name: string,
     email: string,
     password: string,
-    role: string
+    role: USER_ROLES,
+    created_at: string
 }
 
-export interface UserInputDTO {
+export interface UserModel {
     id: string,
     name: string,
     email: string,
     password: string,
-    role: string
-}
-
-export interface UserOutputDTO {
-    message: string,
-    User: {
-        id: string,
-        name: string,
-        email: string,
-        password: string,
-        role: string
-    }
-}
-
-export interface EditUserInputDTO {
-    idToEdit: string,
-    newId: string | undefined,
-    newName: string | undefined,
-    newEmail: string | undefined,
-    newPassword: string | undefined,
-    newRole: string | undefined
-}
-
-export interface EditUserOutputDTO {
-    message: string,
-    User: {
-        id: string,
-        name: string,
-        email: string,
-        password: string,
-        role: string
-    }
+    role: USER_ROLES,
+    createdAt: string
 }
 
 //------------------Posts
@@ -53,44 +35,37 @@ export interface PostDB {
     creator_id: string,
     content: string,
     likes: number,
-    dislikes: number
+    dislikes: number,
+    created_at: string,
+    updated_at: string
 }
 
-export interface PostInputDTO {
+export interface PostModel {
     id: string,
     creatorId: string,
     content: string,
     likes: number,
-    dislikes: number
-}
-
-export interface PostOutputDTO {
-    message: string,
-    Post: {
+    dislikes: number,
+    createdAt: string,
+    updatedAt: string,
+    creator: {
         id: string,
-        creatorId: string,
-        content: string,
-        likes: number,
-        dislikes: number
+        name: string
     }
 }
 
-export interface EditPostInputDTO {
-    idToEdit: string,
-    newId: string | undefined,
-    newCreatorId: string | undefined,
-    newContent: string | undefined,
-    newLikes: number | undefined,
-    newDislikes: number | undefined
+export interface PostWithCreatorDB extends PostDB {
+    creator_name: string
 }
 
-export interface EditPostOutputDTO {
-    message: string,
-    Post: {
-        id: string,
-        creatorId: string,
-        content: string,
-        likes: number,
-        dislikes: number
-    }
+//------------------Like/dislike
+export interface LikeDislikeDB {
+    user_id: string,
+    post_id: string,
+    like: number
+}
+
+export enum POST_LIKE {
+    ALREADY_LIKED = "ALREADY LIKED",
+    ALREADY_DISLIKED = "ALREADY DISLIKED"
 }

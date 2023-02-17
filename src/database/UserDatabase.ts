@@ -20,7 +20,7 @@ export class UserDatabase extends BaseDatabase {
         }
     }
 
-    public async findUserById(id: string) {
+    public async findUserById(id: string): Promise<UserDB | undefined> {
         const [ userDB ]: UserDB[] | undefined[] = await BaseDatabase
             .connection(UserDatabase.TABLE_USERS)
             .where({ id })
@@ -28,23 +28,31 @@ export class UserDatabase extends BaseDatabase {
         return userDB
     }
 
-    public async insertUser(newUserDB: UserDB) {
+    public async insertUser(newUserDB: UserDB): Promise<void>  {
         await BaseDatabase
             .connection(UserDatabase.TABLE_USERS)
             .insert(newUserDB)
     }
 
-    public async updateUser(userDB: UserDB) {
-        await BaseDatabase
-            .connection(UserDatabase.TABLE_USERS)
-            .update(userDB)
-            .where({ id: userDB.id })
-    }
+    // public async updateUser(userDB: UserDB) {
+    //     await BaseDatabase
+    //         .connection(UserDatabase.TABLE_USERS)
+    //         .update(userDB)
+    //         .where({ id: userDB.id })
+    // }
 
-    public async deleteUserById(id: string) {
-        await BaseDatabase
+    // public async deleteUserById(id: string) {
+    //     await BaseDatabase
+    //         .connection(UserDatabase.TABLE_USERS)
+    //         .delete()
+    //         .where({ id })
+    // }
+
+    public async findUserByEmail(email: string): Promise<UserDB | undefined> {
+        const [ userDB ]: UserDB[] | undefined[] = await BaseDatabase
             .connection(UserDatabase.TABLE_USERS)
-            .delete()
-            .where({ id })
+            .where({ email })
+
+        return userDB
     }
 }

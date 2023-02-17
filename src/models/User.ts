@@ -1,44 +1,77 @@
+import { UserDB, UserModel, USER_ROLES } from "../interfaces/types"
+
 export class User {
     constructor(
         private id: string,
         private name: string,
         private email: string,
         private password: string,
-        private role: string
+        private role: USER_ROLES,
+        private createdAt: string
     ) { }
 
     public getId(): string {
-        return this.id;
+        return this.id
     }
     public setId(value: string) {
-        this.id = value;
+        this.id = value
     }
 
     public getName(): string {
-        return this.name;
+        return this.name
     }
     public setName(value: string) {
-        this.name = value;
+        this.name = value
     }
 
     public getEmail(): string {
-        return this.email;
+        return this.email
     }
     public setEmail(value: string) {
-        this.email = value;
+        this.email = value
     }
 
     public getPassword(): string {
-        return this.password;
+        return this.password
     }
     public setPassword(value: string) {
-        this.password = value;
+        this.password = value
     }
 
-    public getRole(): string {
-        return this.role;
+    public getRole(): USER_ROLES {
+        return this.role
     }
-    public setRole(value: string) {
-        this.role = value;
+    public setRole(value: USER_ROLES) {
+        this.role = value
+    }
+
+    public getCreatedAt(): string {
+        return this.createdAt
+    }
+
+    public setCreatedAt(value: string): void {
+        this.createdAt = value
+    }
+
+    public toDBModel(): UserDB {
+        return {
+            id: this.id,
+            name: this.name,
+            email: this.email,
+            password: this.password,
+            role: this.role,
+            created_at: this.createdAt
+        }
+    }
+
+    public toBusinessModel(): UserModel {
+        return {
+            id: this.id,
+            name: this.name,
+            email: this.email,
+            password: this.password,
+            role: this.role,
+            createdAt: this.createdAt
+        }
     }
 }
