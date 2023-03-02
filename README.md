@@ -1,7 +1,7 @@
 Projeto Labook
 
 Projeto back-end para o desenvolvimento de uma rede social.
-Elaborado utilizando conceitos de arquitetura em camadas, programa orientada a objetos, utilização de tokens JWT, router, entre outros.
+Elaborado utilizando conceitos de arquitetura em camadas, programação orientada a objetos, utilização de tokens JWT, router, entre outros.
 Utilizados framework Express do NodeJS e banco de dados SQL.
 
 Utilização:
