@@ -1,5 +1,5 @@
 import { PostDatabase } from "../database/PostDatabase"
-import { CreatePostInputDTO, DeletePostInputDTO, EditPostInputDTO, GetPostInputDTO, GetPostOutputDTO, LikeOrDislikePostInputDTO } from "../dtos/UserDTO"
+import { CreatePostInputDTO, CreatePostOutputDTO, DeletePostInputDTO, DeletePostOutputDTO, EditPostInputDTO, EditPostOutputDTO, GetPostInputDTO, GetPostOutputDTO, LikeOrDislikePostInputDTO } from "../dtos/UserDTO"
 import { BadRequestError } from "../errors/BadRequestError"
 import { ForbiddenRequestError } from "../errors/ForbiddenRequestError"
 import { NotFoundError } from "../errors/NotFoundError"
@@ -61,8 +61,8 @@ export class PostBusiness {
         return output
     }
 
-    public createPost = async (input: CreatePostInputDTO): Promise<void> => {
-        const { token, name } = input
+    public createPost = async (input: CreatePostInputDTO): Promise<CreatePostOutputDTO> => {
+        const { token, name, content } = input
 
         if (token === undefined) {
             throw new BadRequestError('Missing token')
@@ -106,9 +106,16 @@ export class PostBusiness {
         const postDB = post.toDBModel()
 
         await this.postDatabase.insertPost(postDB)
+
+        const output: CreatePostOutputDTO = {
+            message: "Post created successfully",
+            content
+        }
+
+        return output
     }
 
-    public editPost = async (input: EditPostInputDTO): Promise<void> => {
+    public editPost = async (input: EditPostInputDTO): Promise<EditPostOutputDTO> => {
         const { idToEdit, token, name } = input
 
         if (token === undefined) {
@@ -163,9 +170,15 @@ export class PostBusiness {
         const updatedPostDB = post.toDBModel()
 
         await this.postDatabase.updatePost(idToEdit, updatedPostDB)
+
+        const output: EditPostOutputDTO = {
+            message: "Post edited successfully"
+        }
+        
+        return output
     }
 
-    public deletePost = async (input: DeletePostInputDTO): Promise<void> => {
+    public deletePost = async (input: DeletePostInputDTO): Promise<DeletePostOutputDTO> => {
         const { idToDelete, token } = input
 
         if (token === undefined) {
@@ -206,6 +219,12 @@ export class PostBusiness {
         }
 
         await this.postDatabase.deletePostById(idToDelete)
+
+        const output: DeletePostOutputDTO = {
+            message: "Post deleted successfully"
+        }
+        
+        return output
     }
 
     public likeOrDislikePlaylist = async (input: LikeOrDislikePostInputDTO): Promise<void> => {

@@ -34,16 +34,16 @@ export class PostDatabase extends BaseDatabase {
         const result: PostWithCreatorDB[] = await BaseDatabase
             .connection(PostDatabase.TABLE_POSTS)
             .select(
-                "post.id",
-                "post.creator_id",
-                "post.name",
-                "post.likes",
-                "post.dislikes",
-                "post.created_at",
-                "post.updated_at",
-                "users.name AS creator_name"
+                // "post.id",
+                // "post.creator_id",
+                // "post.name",
+                // "post.likes",
+                // "post.dislikes",
+                // "post.created_at",
+                // "post.updated_at",
+                // "users.name AS creator_name"
             )
-            .join("users", "post.creator_id", "=", "users.id")
+            // .join("users", "post.creator_id", "=", "users.id")
 
         return result
     }

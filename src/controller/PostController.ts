@@ -18,10 +18,15 @@ export class PostController {
 
             res.status(200).send(output)
         } catch (error) {
-            if (error instanceof BaseError) {
-                res.status(error.statusCode).send(error.message)
+    
+            if (req.statusCode === 200) {
+                res.status(500)
+            }
+    
+            if (error instanceof Error) {
+                res.send(error.message)
             } else {
-                res.status(500).send("Unexpected error")
+                res.send("Unexpected error")
             }
         }
     }
@@ -30,7 +35,8 @@ export class PostController {
         try {
             const input: CreatePostInputDTO = {
                 token: req.headers.authorization,
-                name: req.body.name
+                name: req.body.name,
+                content: req.body.content
             }
 
             await this.postBusiness.createPost(input)
@@ -38,11 +44,15 @@ export class PostController {
             res.status(201).end()
         } catch (error) {
             console.log(error)
-
-            if (error instanceof BaseError) {
-                res.status(error.statusCode).send(error.message)
+    
+            if (req.statusCode === 200) {
+                res.status(500)
+            }
+    
+            if (error instanceof Error) {
+                res.send(error.message)
             } else {
-                res.status(500).send("Unexpected error")
+                res.send("Unexpected error")
             }
         }
     }

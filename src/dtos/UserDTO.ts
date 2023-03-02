@@ -54,14 +54,7 @@ export interface EditPostInputDTO {
 }
 
 export interface EditPostOutputDTO {
-    message: string,
-    Post: {
-        id: string,
-        creatorId: string,
-        content: string,
-        likes: number,
-        dislikes: number
-    }
+    message: string
 }
 
 export interface UserInputDTO {
@@ -111,7 +104,13 @@ export type GetPostOutputDTO = PostModel[]
 
 export interface CreatePostInputDTO {
     token: string | undefined,
-    name: unknown
+    name: unknown,
+    content: string
+}
+
+export interface CreatePostOutputDTO {
+    message: string,
+    content: string
 }
 
 export interface EditPostInputDTO {
@@ -123,6 +122,10 @@ export interface EditPostInputDTO {
 export interface DeletePostInputDTO {
     idToDelete: string,
     token: string | undefined
+}
+
+export interface DeletePostOutputDTO {
+    message: string
 }
 
 export interface LikeOrDislikePostInputDTO {
